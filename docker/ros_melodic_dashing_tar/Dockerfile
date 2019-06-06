@@ -36,6 +36,7 @@ WORKDIR /home/$USERNAME
 USER root
 
 
+#####
 # Download ROS 2 tarball
 
 RUN apt update && apt install -y wget && \
@@ -125,3 +126,10 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 
+# Install colcon
+RUN apt update && apt install -y python3-colcon-common-extensions
+
+
+# This makes container start up in user instead of root
+# Commands below run as the developer user
+USER $USERNAME
