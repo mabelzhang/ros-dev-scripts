@@ -183,8 +183,13 @@ RUN apt-get update && apt-get install -y \
 
 RUN apt-get update \
  && apt-get install -y \
-        sudo \
-        vim
+    sudo \
+    vim
+
+# Custom packages
+RUN apt-get install -y \
+    libsdl-image1.2-dev \
+    libsdl-dev
 
 # Add a user with the same user_id as the user outside the container
 # Requires a docker build argument `user_id`
