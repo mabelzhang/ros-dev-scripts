@@ -1,3 +1,5 @@
+# ROS 1 Melodic from Debian; ROS 2 Dashing from nightly image
+
 #####
 # From ROS 2
 #   https://hub.docker.com/r/osrf/ros2/dockerfile

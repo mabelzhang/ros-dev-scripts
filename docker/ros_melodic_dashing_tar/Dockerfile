@@ -1,3 +1,5 @@
+# ROS 1 Melodic from Debian, ROS 2 Dashing from tar file release
+
 FROM ubuntu:bionic
 
 RUN apt update && apt install -y locales && \
