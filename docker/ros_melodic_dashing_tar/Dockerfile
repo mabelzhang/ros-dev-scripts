@@ -2,18 +2,23 @@
 
 FROM ubuntu:bionic
 
-RUN apt update && apt install -y locales && \
+# Bypass geographic area prompt
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y locales && \
     locale-gen en_US en_US.UTF-8 && \
     update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 && \
     export LANG=en_US.UTF-8
 
-RUN apt update && apt install -y curl gnupg2 lsb-release && \
+RUN apt-get update && apt-get install -y curl gnupg2 lsb-release && \
     curl http://repo.ros2.org/repos.key | apt-key add - && \
     sh -c 'echo "deb [arch=amd64,arm64] http://packages.ros.org/ros2/ubuntu `lsb_release -cs` main" > /etc/apt/sources.list.d/ros2-latest.list'
 
 
 #####
-# From subt_docker
+# Create a user, so that can run rosdep update from non-root user
+# From subt Docker for gazebo9
+#   https://bitbucket.org/osrf/subt/src/gazebo9/docker/subt/Dockerfile
 
 RUN apt-get update \
  && apt-get install -y \
@@ -39,9 +44,9 @@ USER root
 
 
 #####
-# Download ROS 2 tarball
+# ROS 2 Dashing from tarball
 
-RUN apt update && apt install -y wget && \
+RUN apt-get update && apt-get install -y wget && \
     mkdir /home/$USERNAME/Downloads && cd /home/$USERNAME/Downloads && \
     wget https://ci.ros2.org/view/packaging/job/packaging_linux/lastSuccessfulBuild/artifact/ws/ros2-package-linux-x86_64.tar.bz2
 
@@ -50,7 +55,7 @@ RUN mkdir -p /home/$USERNAME/ros2_install && \
     tar xf /home/$USERNAME/Downloads/ros2-package-linux-x86_64.tar.bz2
 
 # Install and init rosdep
-RUN apt install -y python-rosdep && \
+RUN apt-get install -y python-rosdep && \
     rosdep init && \
     rosdep update
 
@@ -58,79 +63,31 @@ RUN apt install -y python-rosdep && \
 RUN rosdep install --from-paths /home/$USERNAME/ros2_install/ros2-linux/share --ignore-src --rosdistro dashing -y --skip-keys "console_bridge fastcdr fastrtps libopensplice67 libopensplice69 osrf_testing_tools_cpp poco_vendor rmw_connext_cpp rosidl_typesupport_connext_c rosidl_typesupport_connext_cpp rti-connext-dds-5.3.1 tinyxml_vendor tinyxml2_vendor urdfdom urdfdom_headers"
 
 # Install python3 libs
-RUN apt install -y libpython3-dev
+RUN apt-get install -y libpython3-dev
 
 # Install additional DDS implementation
-RUN apt update && sudo apt install -q -y libopensplice69
+RUN apt-get update && sudo apt-get install -q -y libopensplice69
 
 
 #####
-# From ROS 1 ros-core
+# ROS 1 Melodic from Debian
 
-# install packages
-RUN apt-get update && apt-get install -q -y \
-    dirmngr \
-    gnupg2 \
-    lsb-release \
-    && rm -rf /var/lib/apt/lists/*
+# Set up sources.list
+RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
 
-# setup keys
-RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 421C365BD9FF1F717815A3895523BAEEB01FA116
+# Set up keys
+RUN apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
 
-# setup sources.list
-RUN echo "deb http://packages.ros.org/ros/ubuntu `lsb_release -sc` main" > /etc/apt/sources.list.d/ros-latest.list
+# Install Melodic
+RUN apt-get update \
+  && apt-get install -y ros-melodic-desktop-full
 
-# install bootstrap tools
-RUN apt-get update && apt-get install --no-install-recommends -y \
-    python-rosdep \
-    python-rosinstall \
-    python-vcstools \
-    && rm -rf /var/lib/apt/lists/*
-
-# setup environment
-ENV LANG C.UTF-8
-ENV LC_ALL C.UTF-8
-
-# bootstrap rosdep
-#RUN rosdep init \
-#    && rosdep update
-RUN rosdep update
-
-# install ros packages
-#ENV ROS_DISTRO melodic
-RUN apt-get update && apt-get install -y \
-    ros-melodic-ros-core=1.4.1-0* \
-    && rm -rf /var/lib/apt/lists/*
+# Dependencies for building packages
+RUN apt-get install -y python-rosinstall python-rosinstall-generator python-wstool build-essential
 
 
-#####
-# From ROS 1 ros-base
-RUN apt-get update && apt-get install -y \
-    ros-melodic-ros-base=1.4.1-0* \
-    && rm -rf /var/lib/apt/lists/*
-
-#####
-# From ROS 1 robot
-RUN apt-get update && apt-get install -y \
-    ros-melodic-robot=1.4.1-0* \
-    && rm -rf /var/lib/apt/lists/*
-
-#####
-# From ROS 1 desktop
-RUN apt-get update && apt-get install -y \
-    ros-melodic-desktop=1.4.1-0* \
-    && rm -rf /var/lib/apt/lists/*
-
-#####
-# From ROS 1 desktop-full
-RUN apt-get update && apt-get install -y \
-    ros-melodic-desktop-full=1.4.1-0* \
-    && rm -rf /var/lib/apt/lists/*
-
-
-# Install colcon
-RUN apt update && apt install -y python3-colcon-common-extensions
-
+# Install colcon for ROS 2 development
+RUN apt-get update && apt-get install -y python3-colcon-common-extensions
 
 # This makes container start up in user instead of root
 # Commands below run as the developer user
