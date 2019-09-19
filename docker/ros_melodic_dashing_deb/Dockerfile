@@ -8,13 +8,13 @@ FROM ubuntu:bionic
 #   https://index.ros.org/doc/ros2/Installation/Dashing/Linux-Install-Debians/
 
 # Set up locale
-RUN apt update && apt install -y locales && \
+RUN apt-get update && apt-get install -y locales && \
   locale-gen en_US en_US.UTF-8 && \
   update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 && \
   export LANG=en_US.UTF-8
 
 # Set up sources
-RUN apt update && apt install -y curl gnupg2 lsb-release && \
+RUN apt-get update && apt-get install -y curl gnupg2 lsb-release && \
   curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add -
 # Set up sources.list
 RUN sh -c 'echo "deb [arch=amd64,arm64] http://packages.ros.org/ros2/ubuntu `lsb_release -cs` main" > /etc/apt/sources.list.d/ros2-latest.list'
@@ -23,12 +23,12 @@ RUN sh -c 'echo "deb [arch=amd64,arm64] http://packages.ros.org/ros2/ubuntu `lsb
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Install Dashing
-RUN apt update \
-  && apt install -y ros-dashing-desktop
+RUN apt-get update \
+  && apt-get install -y ros-dashing-desktop
 
 # Install argcomplete for command line tools
-RUN apt update \
-  && apt install -y python3-argcomplete ros-dashing-rmw-opensplice-cpp
+RUN apt-get update \
+  && apt-get install -y python3-argcomplete ros-dashing-rmw-opensplice-cpp
 
 
 #####
@@ -42,11 +42,11 @@ RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main"
 RUN apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
 
 # Install Melodic
-RUN apt update \
-  && apt install -y ros-melodic-desktop-full
+RUN apt-get update \
+  && apt-get install -y ros-melodic-desktop-full
 
 # Dependencies for building packages
-RUN apt install -y python-rosinstall python-rosinstall-generator python-wstool build-essential
+RUN apt-get install -y python-rosinstall python-rosinstall-generator python-wstool build-essential
 
 
 #####
@@ -54,8 +54,8 @@ RUN apt install -y python-rosinstall python-rosinstall-generator python-wstool b
 # From subt Docker for gazebo9
 #   https://bitbucket.org/osrf/subt/src/gazebo9/docker/subt/Dockerfile
 
-RUN apt update \
- && apt install -y \
+RUN apt-get update \
+ && apt-get install -y \
     sudo \
     vim \
     libsdl-image1.2-dev \
@@ -81,8 +81,8 @@ USER root
 
 # Install ros1_bridge to talk between ROS 1 and 2
 # Requires both ROS 1 and 2 to have been installed
-RUN apt update \
-  && apt install -y ros-dashing-ros1-bridge
+RUN apt-get update \
+  && apt-get install -y ros-dashing-ros1-bridge
 
 
 # When running a container start in the developer's home folder

@@ -128,29 +128,28 @@ RUN apt-get update && \
   apt-get install -y python-rosinstall-generator python-wstool python-rosinstall
 
 # Create a catkin workspace
-# TODO: Make ROS1_WS env var work
-#ENV ROS1_WS /opt/ros1_ws/melodic
-RUN mkdir -p /opt/ros1_ws/melodic/src
+ENV ROS1_WS /opt/ros1_ws/melodic
+RUN mkdir -p ${ROS1_WS}/src
 # Install Debian
-RUN cd /opt/ros1_ws/melodic && \
+RUN cd ${ROS1_WS} && \
   rosinstall_generator desktop_full --rosdistro melodic --deps --tar > melodic-desktop-full.rosinstall && \
-  wstool init -j8 /opt/ros1_ws/melodic/src melodic-desktop-full.rosinstall
+  wstool init -j8 ${ROS1_WS}/src melodic-desktop-full.rosinstall
 
 # Switch to non-root user to run rosdep update
 USER $USERNAME
 # Set env var again after changing user name
-#ENV ROS1_WS /opt/ros1_ws/melodic
+ENV ROS1_WS /opt/ros1_ws/melodic
 
 # Resolve dependencies
 RUN rosdep update && \
-  rosdep install --from-paths /opt/ros1_ws/melodic/src --ignore-src --rosdistro melodic -y
+  rosdep install --from-paths ${ROS1_WS}/src --ignore-src --rosdistro melodic -y
 
 USER root
 # Build catkin workspace
 # cd into the correct directory first, so that catkin can find relative
 #   directory src/
-RUN cd /opt/ros1_ws/melodic && \
-  /opt/ros1_ws/melodic/src/catkin/bin/catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release --install-space /opt/ros1_ws/melodic/install_isolated
+RUN cd ${ROS1_WS} && \
+  ${ROS1_WS}/src/catkin/bin/catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release --install-space ${ROS1_WS}/install_isolated
 
 
 # This makes container start up in user instead of root
