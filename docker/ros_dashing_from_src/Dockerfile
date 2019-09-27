@@ -7,14 +7,14 @@
 FROM ubuntu:bionic
 
 # Set Locale
-RUN apt update && apt install -y locales && \
+RUN apt-get update && apt-get install -y locales && \
   locale-gen en_US en_US.UTF-8 && \
   update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 && \
   export LANG=en_US.UTF-8
 
 # Add ROS 2 apt repository
 # setup keys
-RUN apt update && apt install -y curl gnupg2 lsb-release && \
+RUN apt-get update && apt-get install -y curl gnupg2 lsb-release && \
   curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add -
 # setup sources.list
 RUN sh -c 'echo "deb [arch=amd64,arm64] http://packages.ros.org/ros2/ubuntu `lsb_release -cs` main" > /etc/apt/sources.list.d/ros2-latest.list'
@@ -49,7 +49,7 @@ USER root
 # Install development tools and ROS tools
 # Avoid keyboard interaction
 ARG DEBIAN_FRONTEND=noninteractive
-RUN apt update && apt install -y \
+RUN apt-get update && apt-get install -y \
   build-essential \
   cmake \
   git \
@@ -77,7 +77,7 @@ RUN python3 -m pip install -U \
   pytest-runner \
   setuptools
 # install Fast-RTPS dependencies
-RUN apt install --no-install-recommends -y \
+RUN apt-get install --no-install-recommends -y \
   libasio-dev \
   libtinyxml2-dev
 
@@ -108,7 +108,7 @@ RUN cd $ROS2_WS && \
     --symlink-install
 
 # More DDS implementations
-RUN apt install libopensplice69
+RUN apt-get install libopensplice69
 
 # Custom packages
 RUN apt-get install -y \
@@ -116,13 +116,11 @@ RUN apt-get install -y \
     libsdl-dev \
     libboost-dev
 
+# Optional: PCL
+RUN apt-get update && apt-get install -y libpcl-dev libpcl-msgs-dev ros-dashing-message-filters
+
 # setup bashrc
 RUN cp /etc/skel/.bashrc ~/
-
-# setup entrypoint
-#COPY ./ros_entrypoint.sh /
-#ENTRYPOINT ["/ros_entrypoint.sh"]
-#CMD ["bash"]
 
 
 # This makes container start up in user instead of root
