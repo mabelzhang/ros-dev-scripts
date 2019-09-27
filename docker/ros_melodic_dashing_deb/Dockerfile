@@ -84,6 +84,10 @@ USER root
 RUN apt-get update \
   && apt-get install -y ros-dashing-ros1-bridge
 
+# Install colcon
+RUN apt-get update \
+  && apt-get install -y python3-colcon-common-extensions
+
 
 # When running a container start in the developer's home folder
 WORKDIR /home/$USERNAME
