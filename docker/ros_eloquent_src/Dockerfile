@@ -121,10 +121,13 @@ RUN apt-get install -y python3-argcomplete
 RUN apt-get install -y \
     libsdl-image1.2-dev \
     libsdl-dev \
-    libboost-dev
+    libboost-dev \
+    libyaml-cpp-dev
 
 # Optional: PCL
-RUN apt-get update && apt-get install -y libpcl-dev libpcl-msgs-dev ros-eloquent-message-filters
+RUN apt-get update && apt-get install -y libpcl-dev libpcl-msgs-dev
+# Optional: pybind
+RUN apt-get update && apt-get install -y python-pybind11
 
 # setup bashrc
 RUN cp /etc/skel/.bashrc ~/

@@ -111,10 +111,11 @@ RUN cd $ROS2_WS && \
 RUN apt-get install libopensplice69
 
 # Custom packages
-RUN apt-get install -y \
+RUN apt-get update && apt-get install -y \
     libsdl-image1.2-dev \
     libsdl-dev \
-    libboost-dev
+    libboost-dev \
+    libyaml-cpp-dev
 
 # Optional: PCL
 RUN apt-get update && apt-get install -y libpcl-dev libpcl-msgs-dev ros-dashing-message-filters

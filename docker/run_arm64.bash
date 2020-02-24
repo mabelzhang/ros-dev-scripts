@@ -61,6 +61,7 @@ then
   DOCKER_OPTS="$DOCKER_OPTS -v $VIMRC:/home/developer/.vimrc:ro"
 fi
 
+DOCKER_OPTS="$DOCKER_OPTS -v $SETUPRC:/home/developer/.setuprc:ro"
 GITCONFIG=~/.gitconfig
 DOCKER_OPTS="$DOCKER_OPTS -v $GITCONFIG:/home/developer/.gitconfig:ro"
 
@@ -81,6 +82,8 @@ done
 # E.g.:
 # -v "/opt/sublime_text:/opt/sublime_text" \
 
+# `--network host` uses the network of the host computer
+# `--platform arm64` runs arm64 architecture
 docker run -it \
   -e DISPLAY \
   -e QT_X11_NO_MITSHM=1 \
@@ -93,5 +96,7 @@ docker run -it \
   --rm \
   --runtime=nvidia \
   --security-opt seccomp=unconfined \
+  --network host \
+  --platform arm64 \
   $DOCKER_OPTS \
   $IMG
