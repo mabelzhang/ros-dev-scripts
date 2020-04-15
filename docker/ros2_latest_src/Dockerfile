@@ -96,6 +96,8 @@ RUN cd ${ROS2_WS} && \
 USER $USERNAME
 # Set env var again after changing user name
 ENV ROS2_WS /opt/ros2_ws/foxy
+# Dependency for one of the packages
+RUN sudo apt-get install -y libssl-dev
 RUN sudo rosdep init && \
   rosdep update && \
   sudo apt-get update && \
@@ -115,7 +117,7 @@ RUN cd ${ROS2_WS} && \
     --cmake-args \
       -DSECURITY=ON --no-warn-unused-cli \
     --symlink-install \
-    --packages-skip test_rclcpp ros2bag --packages-skip-regex rosbag2*
+    --packages-skip test_rclcpp
 
 # argcomplete for ROS 2 command line tools autocomplete
 RUN apt-get install -y python3-argcomplete
