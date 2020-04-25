@@ -1,6 +1,8 @@
-# ROS 2 latest development from source
+# Dependencies to build a ROS 2 workspace from source, not including ROS 2,
+# (which is to be pulled and built in the container using a directory mounted
+# from host machine).
 
-# 13 Apr 2020
+# 24 Apr 2020
 # Commands from instructions to install ROS 2 from source
 #   https://index.ros.org/doc/ros2/Installation/Foxy/Linux-Development-Setup/#linux-latest
 
@@ -84,41 +86,6 @@ RUN apt-get install --no-install-recommends -y \
 #RUN apt-get install --no-install-recommends -y \
 #  libcunit1-dev
 
-# clone source
-ENV ROS2_WS /opt/ros2_ws/foxy
-RUN mkdir -p ${ROS2_WS}/src
-RUN cd ${ROS2_WS} && \
-  wget https://raw.githubusercontent.com/ros2/ros2/master/ros2.repos && \
-  vcs import src < ros2.repos
-
-# Install dependencies using rosdep
-# Use non-root for rosdep
-USER $USERNAME
-# Set env var again after changing user name
-ENV ROS2_WS /opt/ros2_ws/foxy
-# Dependency for one of the packages
-RUN sudo apt-get install -y libssl-dev
-RUN sudo rosdep init && \
-  rosdep update && \
-  sudo apt-get update && \
-  rosdep install --from-paths ${ROS2_WS}/src --ignore-src --rosdistro foxy -y --skip-keys "console_bridge fastcdr fastrtps libopensplice67 libopensplice69 rti-connext-dds-5.3.1 urdfdom_headers"
-
-USER root
-ENV ROS2_WS /opt/ros2_ws/foxy
-
-# More DDS implementations
-# Not available in Ubuntu 20.04 yet
-#RUN apt-get install -y libopensplice69
-
-# build source
-# test_rclcpp has compiler error. Temporary skipping
-RUN cd ${ROS2_WS} && \
-  colcon build \
-    --cmake-args \
-      -DSECURITY=ON --no-warn-unused-cli \
-    --symlink-install \
-    --packages-skip test_rclcpp
-
 # argcomplete for ROS 2 command line tools autocomplete
 RUN apt-get install -y python3-argcomplete
 
@@ -133,6 +100,9 @@ RUN apt-get install -y \
 # Not in Ubuntu 20.04
 #RUN apt-get update && apt-get install -y python-pybind11
 RUN apt-get update && apt-get install -y python3-argcomplete
+RUN apt-get install -y libssl-dev
+
+RUN rosdep init
 
 # setup bashrc
 RUN cp /etc/skel/.bashrc ~/
@@ -141,3 +111,31 @@ RUN cp /etc/skel/.bashrc ~/
 # This makes container start up in user instead of root
 # Commands below run as the developer user
 USER $USERNAME
+
+
+
+# After starting container, run in a directory mounted from host machine, to
+# keep the updated workspace on host machine, so that it does not need to be
+# updated every time the container restarts:
+
+# clone source
+#export ROS2_WS=/home/$USERNAME/ros2_ws/foxy
+#mkdir -p ${ROS2_WS}/src
+#cd ${ROS2_WS} && \
+#  wget https://raw.githubusercontent.com/ros2/ros2/master/ros2.repos && \
+#  vcs import src < ros2.repos
+
+# Install dependencies using rosdep
+# Dependency for one of the packages
+#rosdep update && \
+#  sudo apt-get update && \
+#  rosdep install --from-paths ${ROS2_WS}/src --ignore-src --rosdistro foxy -y --skip-keys "console_bridge fastcdr fastrtps libopensplice67 libopensplice69 rti-connext-dds-5.3.1 urdfdom_headers"
+
+# build source
+# test_rclcpp has compiler error. Temporary skipping
+#cd ${ROS2_WS} && \
+#  colcon build \
+#    --cmake-args \
+#      -DSECURITY=ON --no-warn-unused-cli \
+#    --symlink-install \
+#    --packages-skip test_rclcpp
