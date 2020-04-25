@@ -116,7 +116,9 @@ USER $USERNAME
 
 # After starting container, run in a directory mounted from host machine, to
 # keep the updated workspace on host machine, so that it does not need to be
-# updated every time the container restarts:
+# updated every time the container restarts.
+# The workspace can be updated periodically using instructions at
+# https://index.ros.org/doc/ros2/Installation/Maintaining-a-Source-Checkout/#maintainingsource
 
 # clone source
 #export ROS2_WS=/home/$USERNAME/ros2_ws/foxy
