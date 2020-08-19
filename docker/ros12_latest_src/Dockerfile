@@ -37,6 +37,17 @@ RUN mkdir -p $ROS_WS/src
 RUN cd $ROS_WS && \
   rosinstall_generator ros_comm --rosdistro noetic --deps --tar > noetic-ros-comm.rosinstall && \
   wstool init -j8 src noetic-ros-comm.rosinstall
+
+# Not tested
+RUN cd ${ROS_WS}/src \
+  && git clone https://github.com/ros/geometry.git \
+  && git clone https://github.com/ros/common_msgs \
+  && git clone https://github.com/ros/angles.git \
+  && git clone https://github.com/ros/geometry2.git \
+  && git clone https://github.com/ros/actionlib.git \
+  && git clone https://github.com/orocos/orocos_kinematics_dynamics.git \
+  && touch orocos_kinematics_dynamics/python_orocos_kdl/CATKIN_IGNORE
+
 RUN rosdep install --from-paths $ROS_WS/src --ignore-src --rosdistro noetic -y
 # Download latest version of catkin_make_isolated with python3 in shebang. Else error when run it
 RUN cd $ROS_WS/src/catkin/bin/ && \
