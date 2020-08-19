@@ -132,7 +132,7 @@ RUN apt-get install -y \
 # Optional: pybind
 # Not in Ubuntu 20.04
 #RUN apt-get update && apt-get install -y python-pybind11
-RUN apt-get update && apt-get install -y python3-argcomplete
+RUN apt-get update && apt-get install -y python3-argcomplete zstd python3-bloom
 
 # setup bashrc
 RUN cp /etc/skel/.bashrc ~/
