@@ -86,6 +86,33 @@ RUN apt-get install --no-install-recommends -y \
 #RUN apt-get install --no-install-recommends -y \
 #  libcunit1-dev
 
+# Clone source temporarily, so that can run rosdep to install all the
+# dependencies
+ENV ROS2_WS /opt/ros2_ws/foxy
+RUN mkdir -p ${ROS2_WS}/src
+RUN cd ${ROS2_WS} && \
+  wget https://raw.githubusercontent.com/ros2/ros2/master/ros2.repos && \
+  vcs import src < ros2.repos
+
+# Install dependencies using rosdep
+# Use non-root for rosdep
+USER $USERNAME
+# Set env var again after changing user name
+ENV ROS2_WS /opt/ros2_ws/foxy
+# Dependency for one of the packages
+RUN sudo apt-get install -y libssl-dev
+RUN sudo rosdep init && \
+  rosdep update && \
+  sudo apt-get update && \
+  rosdep install --from-paths ${ROS2_WS}/src --ignore-src --rosdistro foxy -y --skip-keys "console_bridge fastcdr fastrtps libopensplice67 libopensplice69 rti-connext-dds-5.3.1 urdfdom_headers"
+
+USER root
+ENV ROS2_WS /opt/ros2_ws/foxy
+
+# Remove ros 2 source, so can mount a copy from host machine when run container,
+# which allows changes to last between container reboots.
+RUN rm -r /opt/ros2_ws
+
 # argcomplete for ROS 2 command line tools autocomplete
 RUN apt-get install -y python3-argcomplete
 
@@ -101,8 +128,6 @@ RUN apt-get install -y \
 #RUN apt-get update && apt-get install -y python-pybind11
 RUN apt-get update && apt-get install -y python3-argcomplete zstd python3-bloom libssl-dev
 
-RUN rosdep init
-
 # setup bashrc
 RUN cp /etc/skel/.bashrc ~/
 
@@ -110,7 +135,6 @@ RUN cp /etc/skel/.bashrc ~/
 # This makes container start up in user instead of root
 # Commands below run as the developer user
 USER $USERNAME
-
 
 
 # After starting container, run in a directory mounted from host machine, to
@@ -126,11 +150,8 @@ USER $USERNAME
 #  wget https://raw.githubusercontent.com/ros2/ros2/master/ros2.repos && \
 #  vcs import src < ros2.repos
 
-# Install dependencies using rosdep
-# Dependency for one of the packages
-#rosdep update && \
-#  sudo apt-get update && \
-#  rosdep install --from-paths ${ROS2_WS}/src --ignore-src --rosdistro foxy -y --skip-keys "console_bridge fastcdr fastrtps libopensplice67 libopensplice69 rti-connext-dds-5.3.1 urdfdom_headers"
+# (Dependencies should have already been installed during Docker image build
+# in the rosdep command above.)
 
 # build source
 # test_rclcpp has compiler error. Temporary skipping
