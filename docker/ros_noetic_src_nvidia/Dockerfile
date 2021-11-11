@@ -5,7 +5,7 @@
 
 # 15 Oct 2020
 
-# Ubuntu 18.04 with nvidia-docker2 beta opengl support
+# Ubuntu 20.04 with nvidia-docker2 beta opengl support
 FROM nvidia/opengl:1.0-glvnd-devel-ubuntu20.04
 
 # This avoids keyboard interaction when asked for geographic area

@@ -2,11 +2,15 @@
 # (which is to be pulled and built in the container using a directory mounted
 # from host machine).
 
-# 24 Apr 2020
+# 10 Nov 2021
 # Commands from instructions to install ROS 2 from source
-#   https://index.ros.org/doc/ros2/Installation/Foxy/Linux-Development-Setup/#linux-latest
+#   https://docs.ros.org/en/rolling/Installation/Ubuntu-Development-Setup.html
 
-FROM ubuntu:focal
+# Ubuntu 20.04 with nvidia-docker2 beta opengl support
+FROM nvidia/opengl:1.0-glvnd-devel-ubuntu20.04
+
+# Avoid keyboard interaction
+ARG DEBIAN_FRONTEND=noninteractive
 
 # Set Locale
 RUN apt-get update && apt-get install -y locales && \
@@ -14,12 +18,15 @@ RUN apt-get update && apt-get install -y locales && \
   update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 && \
   export LANG=en_US.UTF-8
 
+RUN apt-get install -y software-properties-common && \
+  add-apt-repository universe
+
 # Add ROS 2 apt repository
 # setup keys
 RUN apt-get update && apt-get install -y curl gnupg2 lsb-release && \
-  curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add -
+  curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key  -o /usr/share/keyrings/ros-archive-keyring.gpg
 # setup sources.list
-RUN sh -c 'echo "deb [arch=amd64,arm64] http://packages.ros.org/ros2/ubuntu `lsb_release -cs` main" > /etc/apt/sources.list.d/ros2-latest.list'
+RUN sh -c 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null'
 
 
 #####
@@ -49,8 +56,6 @@ USER root
 
 
 # Install development tools and ROS tools
-# Avoid keyboard interaction
-ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
   build-essential \
   cmake \
@@ -77,7 +82,8 @@ RUN python3 -m pip install -U \
   flake8-quotes \
   pytest-repeat \
   pytest-rerunfailures \
-  pytest
+  pytest \
+  setuptools
 # install Fast-RTPS dependencies
 RUN apt-get install --no-install-recommends -y \
   libasio-dev \
@@ -88,7 +94,7 @@ RUN apt-get install --no-install-recommends -y \
 
 # Clone source temporarily, so that can run rosdep to install all the
 # dependencies
-ENV ROS2_WS /opt/ros2_ws/foxy
+ENV ROS2_WS /opt/ros2_ws/rolling
 RUN mkdir -p ${ROS2_WS}/src
 RUN cd ${ROS2_WS} && \
   wget https://raw.githubusercontent.com/ros2/ros2/master/ros2.repos && \
@@ -98,16 +104,17 @@ RUN cd ${ROS2_WS} && \
 # Use non-root for rosdep
 USER $USERNAME
 # Set env var again after changing user name
-ENV ROS2_WS /opt/ros2_ws/foxy
+ENV ROS2_WS /opt/ros2_ws/rolling
 # Dependency for one of the packages
 RUN sudo apt-get install -y libssl-dev
 RUN sudo rosdep init && \
   rosdep update && \
   sudo apt-get update && \
-  rosdep install --from-paths ${ROS2_WS}/src --ignore-src --rosdistro foxy -y --skip-keys "console_bridge fastcdr fastrtps libopensplice67 libopensplice69 rti-connext-dds-5.3.1 urdfdom_headers"
+  rosdep install --from-paths ${ROS2_WS}/src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-5.3.1 urdfdom_headers"
+  #rosdep install --from-paths ${ROS2_WS}/src --ignore-src --rosdistro rolling -y --skip-keys "console_bridge fastcdr fastrtps libopensplice67 libopensplice69 rti-connext-dds-5.3.1 urdfdom_headers"
 
 USER root
-ENV ROS2_WS /opt/ros2_ws/foxy
+ENV ROS2_WS /opt/ros2_ws/rolling
 
 # Remove ros 2 source, so can mount a copy from host machine when run container,
 # which allows changes to last between container reboots.
@@ -126,7 +133,8 @@ RUN apt-get install -y \
 # Optional: pybind
 # Not in Ubuntu 20.04
 #RUN apt-get update && apt-get install -y python-pybind11
-RUN apt-get update && apt-get install -y python3-argcomplete zstd python3-bloom libssl-dev
+RUN apt-get update && apt-get install -y python3-argcomplete zstd libssl-dev
+RUN apt-get install -y python3-bloom
 
 # setup bashrc
 RUN cp /etc/skel/.bashrc ~/
@@ -144,7 +152,7 @@ USER $USERNAME
 # https://index.ros.org/doc/ros2/Installation/Maintaining-a-Source-Checkout/#maintainingsource
 
 # clone source
-#export ROS2_WS=/home/$USERNAME/ros2_ws/foxy
+#export ROS2_WS=/home/$USERNAME/ros2_ws/rolling
 #mkdir -p ${ROS2_WS}/src
 #cd ${ROS2_WS} && \
 #  wget https://raw.githubusercontent.com/ros2/ros2/master/ros2.repos && \
