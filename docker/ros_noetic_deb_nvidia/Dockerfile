@@ -60,4 +60,4 @@ USER $USERNAME
 # When running a container, start in the non-root user's home folder
 WORKDIR /home/$USERNAME
 
-RUN sudo rosdep update
+RUN rosdep update
